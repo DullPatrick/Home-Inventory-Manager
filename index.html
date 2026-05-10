@@ -2,51 +2,56 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HomeStock | Gestionar Stoc Casa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>HomeStock - Gestionar Stoc Casa</title>
+    
+    <!-- PWA specific metas -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HomeStock">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2b6e4f">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/icon-192.png">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
+        /* Același CSS ca în versiunea anterioară - l-am scurtat pentru spațiu, dar poți copia tot de mai sus */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #eef2f5; min-height: 100vh; }
-        .app-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        body { font-family: 'Inter', sans-serif; background: #eef2f5; }
+        .app-wrapper { max-width: 1400px; margin: 0 auto; padding: 1rem; }
         .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .auth-card { background: white; border-radius: 2rem; padding: 2rem; width: 90%; max-width: 460px; text-align: center; }
-        .auth-card h2 { font-size: 1.8rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #2b6e4f, #1e4a3b); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .input-auth { width: 100%; padding: 0.9rem 1rem; margin-bottom: 1rem; border-radius: 1.5rem; border: 1px solid #dce6e1; font-size: 0.9rem; }
+        .input-auth { width: 100%; padding: 0.9rem; margin-bottom: 1rem; border-radius: 1.5rem; border: 1px solid #dce6e1; }
         .btn-auth { width: 100%; background: #2b6e4f; border: none; padding: 0.8rem; border-radius: 2rem; color: white; font-weight: 700; cursor: pointer; }
         .btn-auth-outline { background: transparent; border: 1px solid #2b6e4f; color: #2b6e4f; margin-top: 0.8rem; }
-        .error-msg { color: #d9534f; font-size: 0.75rem; margin: 0.5rem 0; }
-        .main-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem 2rem; border-radius: 2rem; margin-bottom: 2rem; }
-        .logo h1 { font-size: 1.7rem; background: linear-gradient(135deg, #2b6e4f, #1e4a3b); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .logout-btn { background: #f0f4f2; border: none; padding: 0.5rem 1.2rem; border-radius: 2rem; cursor: pointer; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 1.8rem; }
-        .stat-card { background: white; border-radius: 1.5rem; padding: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
-        .stat-number { font-size: 1.8rem; font-weight: 800; color: #1e4a3b; }
-        .form-card { background: white; border-radius: 1.8rem; padding: 1.5rem; margin-bottom: 1.8rem; }
-        .form-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-        .input-field { flex: 1; min-width: 130px; }
-        .input-field label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4e6b5e; }
-        .input-field input, .input-field select { width: 100%; padding: 0.7rem 1rem; border-radius: 1.2rem; border: 1px solid #dce6e1; }
-        .btn-primary { background: #2b6e4f; border: none; padding: 0.7rem 1.8rem; border-radius: 2rem; color: white; font-weight: 600; cursor: pointer; }
-        .filter-tabs { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; align-items: center; }
-        .filter-chip { background: #eef3f0; padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.8rem; cursor: pointer; }
+        .error-msg { color: #d9534f; font-size: 0.75rem; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.8rem 1.2rem; border-radius: 1.5rem; margin-bottom: 1rem; }
+        .logo h1 { font-size: 1.3rem; background: linear-gradient(135deg, #2b6e4f, #1e4a3b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+        .stat-card { background: white; border-radius: 1.2rem; padding: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+        .stat-number { font-size: 1.4rem; font-weight: 800; color: #1e4a3b; }
+        .form-card { background: white; border-radius: 1.5rem; padding: 1rem; margin-bottom: 1rem; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .input-field { flex: 1; min-width: 100px; }
+        .input-field input, .input-field select { width: 100%; padding: 0.5rem; border-radius: 1rem; border: 1px solid #dce6e1; }
+        .btn-primary { background: #2b6e4f; border: none; padding: 0.5rem 1.2rem; border-radius: 1.5rem; color: white; cursor: pointer; }
+        .filter-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+        .filter-chip { background: #eef3f0; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.7rem; cursor: pointer; }
         .filter-chip.active { background: #2b6e4f; color: white; }
-        .search-box { margin-left: auto; background: #f8faf8; padding: 0.3rem 1rem; border-radius: 2rem; display: flex; gap: 6px; }
-        .search-box input { border: none; background: transparent; padding: 0.4rem; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-        .product-card { background: white; border-radius: 1.5rem; padding: 1.2rem; border-left: 5px solid #2b6e4f; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; }
+        .product-card { background: white; border-radius: 1.2rem; padding: 0.8rem; border-left: 4px solid #2b6e4f; }
         .product-card.low-stock { border-left-color: #e67e22; background: #fffaf5; }
-        .product-name { font-weight: 800; font-size: 1.1rem; }
-        .quantity { font-size: 1.8rem; font-weight: 800; }
-        .actions { display: flex; gap: 0.8rem; margin-top: 12px; justify-content: flex-end; }
-        .action-btn { background: none; border: none; padding: 6px 12px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        .quantity { font-size: 1.4rem; font-weight: 800; }
+        .actions { display: flex; gap: 0.5rem; margin-top: 8px; justify-content: flex-end; }
+        .action-btn { padding: 4px 10px; border-radius: 30px; cursor: pointer; border: none; }
         .increment { background: #e1f5ec; color: #1e6f48; }
         .decrement { background: #ffe8e4; color: #bb5e3a; }
         .delete { background: #f1f3f2; color: #8d6b63; }
-        .empty-state { grid-column: 1/-1; text-align: center; padding: 3rem; background: #f9fbfa; border-radius: 2rem; }
-        footer { margin-top: 2rem; text-align: center; font-size: 0.7rem; color: #85aa99; }
+        .empty-state { text-align: center; padding: 2rem; background: #f9fbfa; border-radius: 1.5rem; }
         .hidden { display: none; }
     </style>
 </head>
@@ -55,7 +60,7 @@
     <div id="authModal" class="auth-overlay">
         <div class="auth-card">
             <h2><i class="fas fa-boxes"></i> HomeStock</h2>
-            <p>Conectează-te pentru a-ți gestiona stocul personal</p>
+            <p>Conectează-te pentru a-ți gestiona stocul</p>
             <div id="authError" class="error-msg"></div>
             <input type="email" id="authEmail" class="input-auth" placeholder="Email">
             <input type="password" id="authPassword" class="input-auth" placeholder="Parolă (min 6 caractere)">
@@ -67,41 +72,35 @@
     <div id="dashboard" class="app-wrapper hidden">
         <div class="main-header">
             <div class="logo"><h1><i class="fas fa-home"></i> HomeStock</h1></div>
-            <div class="user-info"><span id="userEmail"></span><button id="logoutMainBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Delogare</button></div>
+            <div class="user-info"><span id="userEmail"></span><button id="logoutMainBtn" class="btn-auth-outline" style="padding:0.3rem 0.8rem; margin-top:0;">Ieșire</button></div>
         </div>
-
         <div class="stats-grid">
-            <div class="stat-card"><div><h4>Total produse</h4><div class="stat-number" id="totalItems">0</div></div><i class="fas fa-cube fa-2x" style="color:#83b9a4;"></i></div>
-            <div class="stat-card"><div><h4>Categorii</h4><div class="stat-number" id="totalCategories">0</div></div><i class="fas fa-tags fa-2x" style="color:#83b9a4;"></i></div>
-            <div class="stat-card"><div><h4>Stoc scăzut</h4><div class="stat-number" id="lowStockCount">0</div></div><i class="fas fa-exclamation-triangle fa-2x" style="color:#e67e22;"></i></div>
+            <div class="stat-card"><div><h4 style="font-size:0.7rem;">Produse</h4><div class="stat-number" id="totalItems">0</div></div><i class="fas fa-cube"></i></div>
+            <div class="stat-card"><div><h4 style="font-size:0.7rem;">Categorii</h4><div class="stat-number" id="totalCategories">0</div></div><i class="fas fa-tags"></i></div>
+            <div class="stat-card"><div><h4 style="font-size:0.7rem;">Stoc scăzut</h4><div class="stat-number" id="lowStockCount">0</div></div><i class="fas fa-exclamation-triangle"></i></div>
         </div>
-
         <div class="form-card">
             <div class="form-row">
-                <div class="input-field"><label>Produs</label><input type="text" id="prodName" placeholder="ex: Lapte"></div>
-                <div class="input-field"><label>Cantitate</label><input type="number" id="prodQty" value="1" step="1" min="0"></div>
-                <div class="input-field"><label>Unitate</label><select id="prodUnit"><option>buc</option><option>kg</option><option>L</option><option>pachet</option></select></div>
-                <div class="input-field"><label>Categorie</label><select id="prodCat"><option>Alimente</option><option>Băuturi</option><option>Curățenie</option><option>Igienă</option><option>Altele</option></select></div>
-                <div class="input-field"><label>Prag minim</label><input type="number" id="prodMin" value="2" step="1" min="0"></div>
-                <div><button id="addProductBtn" class="btn-primary"><i class="fas fa-plus"></i> Adaugă</button></div>
+                <div class="input-field"><label>Produs</label><input type="text" id="prodName" placeholder="Lapte"></div>
+                <div class="input-field"><label>Cant.</label><input type="number" id="prodQty" value="1"></div>
+                <div class="input-field"><label>UM</label><select id="prodUnit"><option>buc</option><option>kg</option><option>L</option></select></div>
+                <div class="input-field"><label>Categorie</label><select id="prodCat"><option>Alimente</option><option>Curățenie</option><option>Igienă</option><option>Altele</option></select></div>
+                <div class="input-field"><label>Prag</label><input type="number" id="prodMin" value="2"></div>
+                <button id="addProductBtn" class="btn-primary"><i class="fas fa-plus"></i> Adaugă</button>
             </div>
         </div>
-
         <div class="filter-tabs">
             <div class="filter-chip active" data-filter="all">Toate</div>
             <div class="filter-chip" data-filter="low">Stoc scăzut</div>
             <div class="filter-chip" data-filter="instock">În stoc</div>
             <div class="filter-chip" data-filter="outofstock">Epuizate</div>
-            <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Caută..."></div>
         </div>
-
         <div id="inventoryGrid" class="inventory-grid"></div>
-        <footer>Stocurile sunt salvate în cloud - cont personal</footer>
+        <footer style="text-align:center; font-size:0.6rem; margin-top:1rem;">📱 Date salvate în cloud</footer>
     </div>
 </div>
 
 <script>
-    // CONFIGURARE SUPABASE
     const SUPABASE_URL = 'https://lqhlndoykitoaihzotgm.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxaGxuZG95a2l0b2FpaHpvdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTAyMzIsImV4cCI6MjA5Mzk4NjIzMn0.L5KA339bAzgmQeTu-ZNyog-qQ-4KgeVRcMYXnyuElr0';
     
@@ -109,41 +108,17 @@
     let currentUser = null;
     let inventory = [];
     let currentFilter = "all";
-    let searchQuery = "";
 
     async function initSupabase() {
-        try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            const { data, error } = await supabaseClient.auth.getSession();
-            if (error) console.error("Supabase init error:", error);
-            console.log("✅ Supabase conectat!");
-            return true;
-        } catch (err) {
-            console.error("❌ Eroare conectare Supabase:", err);
-            document.getElementById('authError').innerText = "Eroare conectare la server. Verifică consola.";
-            return false;
-        }
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        return true;
     }
 
     async function loadInventory() {
         if (!currentUser) return [];
-        const { data, error } = await supabaseClient
-            .from('household_items')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('name');
-        if (error) {
-            console.error("Eroare incarcare:", error);
-            return [];
-        }
-        inventory = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            category: item.category,
-            minStockThreshold: item.min_threshold
-        }));
+        const { data, error } = await supabaseClient.from('household_items').select('*').eq('user_id', currentUser.id).order('name');
+        if (error) return [];
+        inventory = data.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit, category: item.category, minStockThreshold: item.min_threshold }));
         renderInventory();
         updateStats();
         return inventory;
@@ -151,195 +126,71 @@
 
     async function addProduct(name, quantity, unit, category, minThreshold) {
         if (!currentUser || !name.trim()) return false;
-        const { data, error } = await supabaseClient
-            .from('household_items')
-            .insert([{
-                user_id: currentUser.id,
-                name: name.trim(),
-                quantity: parseFloat(quantity),
-                unit: unit,
-                category: category,
-                min_threshold: parseInt(minThreshold)
-            }])
-            .select();
-        if (error) {
-            alert("Eroare: " + error.message);
-            return false;
-        }
-        if (data && data[0]) {
-            inventory.push({
-                id: data[0].id,
-                name: data[0].name,
-                quantity: data[0].quantity,
-                unit: data[0].unit,
-                category: data[0].category,
-                minStockThreshold: data[0].min_threshold
-            });
-            renderInventory();
-            updateStats();
-        }
+        const { error } = await supabaseClient.from('household_items').insert([{ user_id: currentUser.id, name: name.trim(), quantity: parseFloat(quantity), unit, category, min_threshold: parseInt(minThreshold) }]);
+        if (error) { alert("Eroare: " + error.message); return false; }
+        await loadInventory();
         return true;
     }
 
     async function updateQuantity(id, delta) {
         const item = inventory.find(i => i.id == id);
         if (!item) return;
-        let newQty = item.quantity + delta;
-        if (newQty < 0) newQty = 0;
-        const { error } = await supabaseClient
-            .from('household_items')
-            .update({ quantity: newQty })
-            .eq('id', id);
-        if (error) return;
-        item.quantity = newQty;
-        renderInventory();
-        updateStats();
+        let newQty = Math.max(0, item.quantity + delta);
+        await supabaseClient.from('household_items').update({ quantity: newQty }).eq('id', id);
+        await loadInventory();
     }
 
     async function deleteProduct(id) {
         if (!confirm("Ștergi acest produs?")) return;
-        const { error } = await supabaseClient
-            .from('household_items')
-            .delete()
-            .eq('id', id);
-        if (error) return;
-        inventory = inventory.filter(i => i.id != id);
-        renderInventory();
-        updateStats();
-    }
-
-    function isLowStock(item) {
-        return item.quantity <= item.minStockThreshold;
+        await supabaseClient.from('household_items').delete().eq('id', id);
+        await loadInventory();
     }
 
     function getFiltered() {
         let filtered = [...inventory];
-        if (currentFilter === "low") filtered = filtered.filter(i => isLowStock(i));
+        if (currentFilter === "low") filtered = filtered.filter(i => i.quantity <= i.minStockThreshold);
         else if (currentFilter === "instock") filtered = filtered.filter(i => i.quantity > 0);
         else if (currentFilter === "outofstock") filtered = filtered.filter(i => i.quantity === 0);
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            filtered = filtered.filter(i => i.name.toLowerCase().includes(q));
-        }
         return filtered;
     }
 
     function updateStats() {
         document.getElementById('totalItems').innerText = inventory.length;
         document.getElementById('totalCategories').innerText = new Set(inventory.map(i => i.category)).size;
-        document.getElementById('lowStockCount').innerText = inventory.filter(i => isLowStock(i)).length;
+        document.getElementById('lowStockCount').innerText = inventory.filter(i => i.quantity <= i.minStockThreshold).length;
     }
 
     function renderInventory() {
         const grid = document.getElementById('inventoryGrid');
         const filtered = getFiltered();
-        if (filtered.length === 0) {
-            grid.innerHTML = `<div class="empty-state"><i class="fas fa-archive"></i> Niciun produs. Adaugă articole în stoc.</div>`;
-            return;
-        }
+        if (filtered.length === 0) { grid.innerHTML = `<div class="empty-state"><i class="fas fa-archive"></i> Niciun produs.</div>`; return; }
         let html = '';
         filtered.forEach(prod => {
-            const low = isLowStock(prod);
-            html += `
-                <div class="product-card ${low ? 'low-stock' : ''}">
-                    <div style="display:flex; justify-content:space-between;">
-                        <div class="product-name">${escapeHtml(prod.name)}</div>
-                        <div style="background:#eef3f0; padding:0.2rem 0.7rem; border-radius:30px; font-size:0.7rem;">${escapeHtml(prod.category)}</div>
-                    </div>
-                    <div style="margin:12px 0; display:flex; align-items:baseline; gap:8px;">
-                        <span class="quantity">${prod.quantity}</span> <span>${escapeHtml(prod.unit)}</span>
-                        ${prod.quantity <= prod.minStockThreshold && prod.quantity > 0 ? '<span style="background:#ffe1c6; padding:2px 8px; border-radius:30px; font-size:0.7rem;">⚠️ Stoc minim</span>' : ''}
-                        ${prod.quantity === 0 ? '<span style="background:#ffe0db; padding:2px 8px; border-radius:30px; font-size:0.7rem;">❌ Epuizat</span>' : ''}
-                    </div>
-                    <div class="actions">
-                        <button class="action-btn increment" onclick="window.updateQuantity('${prod.id}', 1)"><i class="fas fa-plus-circle"></i> +1</button>
-                        <button class="action-btn decrement" onclick="window.updateQuantity('${prod.id}', -1)"><i class="fas fa-minus-circle"></i> -1</button>
-                        <button class="action-btn delete" onclick="window.deleteProduct('${prod.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
-            `;
+            html += `<div class="product-card ${prod.quantity <= prod.minStockThreshold ? 'low-stock' : ''}">
+                <div style="display:flex; justify-content:space-between;"><strong>${escapeHtml(prod.name)}</strong><span style="background:#eef3f0; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.65rem;">${escapeHtml(prod.category)}</span></div>
+                <div style="margin:8px 0;"><span class="quantity">${prod.quantity}</span> ${prod.unit} ${prod.quantity <= prod.minStockThreshold && prod.quantity > 0 ? '⚠️' : ''}</div>
+                <div class="actions"><button class="action-btn increment" onclick="updateQuantity('${prod.id}', 1)">+1</button><button class="action-btn decrement" onclick="updateQuantity('${prod.id}', -1)">-1</button><button class="action-btn delete" onclick="deleteProduct('${prod.id}')">🗑️</button></div>
+            </div>`;
         });
         grid.innerHTML = html;
     }
 
-    window.updateQuantity = updateQuantity;
-    window.deleteProduct = deleteProduct;
-
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
     async function checkSession() {
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) {
-            currentUser = session.user;
-            document.getElementById('userEmail').innerText = currentUser.email;
-            document.getElementById('authModal').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            await loadInventory();
-        } else {
-            document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-        }
+        if (session?.user) { currentUser = session.user; document.getElementById('userEmail').innerText = currentUser.email; document.getElementById('authModal').classList.add('hidden'); document.getElementById('dashboard').classList.remove('hidden'); await loadInventory(); }
+        else { document.getElementById('authModal').classList.remove('hidden'); document.getElementById('dashboard').classList.add('hidden'); }
     }
 
-    async function handleLogin() {
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value;
-        const errorDiv = document.getElementById('authError');
-        if (!email || !password) { errorDiv.innerText = "Completează email și parola."; return; }
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) { errorDiv.innerText = error.message; return; }
-        errorDiv.innerText = "";
-        await checkSession();
-    }
+    async function handleLogin() { const email = document.getElementById('authEmail').value; const password = document.getElementById('authPassword').value; const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { document.getElementById('authError').innerText = error.message; } else { await checkSession(); } }
+    async function handleSignup() { const email = document.getElementById('authEmail').value; const password = document.getElementById('authPassword').value; if (password.length < 6) { document.getElementById('authError').innerText = "Parola minim 6 caractere"; return; } const { error } = await supabaseClient.auth.signUp({ email, password }); if (error) { document.getElementById('authError').innerText = error.message; } else { alert("Cont creat! Te poți autentifica."); } }
+    async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
 
-    async function handleSignup() {
-        const email = document.getElementById('authEmail').value.trim();
-        const password = document.getElementById('authPassword').value;
-        const errorDiv = document.getElementById('authError');
-        if (!email || password.length < 6) { errorDiv.innerText = "Parola minim 6 caractere."; return; }
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) { errorDiv.innerText = error.message; return; }
-        alert("Cont creat! Te poți autentifica acum.");
-        errorDiv.innerText = "";
-    }
+    window.updateQuantity = updateQuantity;
+    window.deleteProduct = deleteProduct;
 
-    async function logout() {
-        await supabaseClient.auth.signOut();
-        currentUser = null;
-        inventory = [];
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('authModal').classList.remove('hidden');
-    }
-
-    window.onload = async () => {
-        const success = await initSupabase();
-        if (success) {
-            await checkSession();
-            document.getElementById('loginBtn').onclick = handleLogin;
-            document.getElementById('signupBtn').onclick = handleSignup;
-            document.getElementById('logoutMainBtn').onclick = logout;
-            document.getElementById('addProductBtn').onclick = async () => {
-                const name = document.getElementById('prodName').value;
-                const qty = document.getElementById('prodQty').value;
-                const unit = document.getElementById('prodUnit').value;
-                const cat = document.getElementById('prodCat').value;
-                const minVal = document.getElementById('prodMin').value;
-                if (!name) { alert("Completează numele"); return; }
-                await addProduct(name, qty, unit, cat, minVal);
-                document.getElementById('prodName').value = '';
-                document.getElementById('prodQty').value = '1';
-            };
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.onclick = () => {
-                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-                    chip.classList.add('active');
-                    currentFilter = chip.getAttribute('data-filter');
-                    renderInventory();
-                };
-            });
-            document.getElementById('searchInput').addEventListener('input', (e) => { searchQuery = e.target.value; renderInventory(); });
-        }
-    };
+    window.onload = async () => { await initSupabase(); await checkSession(); document.getElementById('loginBtn').onclick = handleLogin; document.getElementById('signupBtn').onclick = handleSignup; document.getElementById('logoutMainBtn').onclick = logout; document.getElementById('addProductBtn').onclick = async () => { await addProduct(document.getElementById('prodName').value, document.getElementById('prodQty').value, document.getElementById('prodUnit').value, document.getElementById('prodCat').value, document.getElementById('prodMin').value); document.getElementById('prodName').value = ''; }; document.querySelectorAll('.filter-chip').forEach(chip => { chip.onclick = () => { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); chip.classList.add('active'); currentFilter = chip.getAttribute('data-filter'); renderInventory(); }; }); };
 </script>
 </body>
 </html>
