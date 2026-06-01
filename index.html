@@ -48,7 +48,6 @@
         body { 
             font-family: 'Inter', sans-serif; 
             background: #eef2f5; 
-            /* Previne scroll-urile inutile pe mobil */
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -57,12 +56,10 @@
             margin: 0 auto; 
             padding: 1rem; 
             padding-bottom: 2rem;
-            /* Safe area pentru notch-uri */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             padding-top: 1rem;
         }
         
-        /* Auth Overlay cu animație */
         .auth-overlay { 
             position: fixed; 
             top: 0; 
@@ -268,7 +265,6 @@
         .empty-state { text-align: center; padding: 2rem; background: #f9fbfa; border-radius: 1.5rem; }
         .hidden { display: none; }
         
-        /* Stiluri căutare */
         .search-card {
             background: white;
             border-radius: 1.5rem;
@@ -334,34 +330,6 @@
             border-radius: 4px;
             padding: 0 2px;
             font-weight: 600;
-        }
-        
-        /* Instalare PWA button sugerat */
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #1e4a3b;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            font-weight: 500;
-        }
-        
-        .install-prompt button {
-            background: white;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 2rem;
-            color: #1e4a3b;
-            font-weight: bold;
-            cursor: pointer;
         }
         
         @media (max-width: 600px) {
@@ -432,13 +400,11 @@
         </div>
         
         <div id="inventoryGrid" class="inventory-grid"></div>
-        <footer style="text-align:center; font-size:0.7rem; margin-top:1.5rem; color:#8ba89a;">📱 Date salvate în cloud • Instalează aplicația pe telefon</footer>
-    </div>
-    
-    <!-- PWA Install Prompt (opțional) -->
-    <div id="installBanner" class="install-prompt hidden">
-        <span><i class="fas fa-download"></i> Instalează HomeStock pe telefon</span>
-        <button id="installAppBtn">Instalează</button>
+        
+        <!-- Footer simplu fără mesaj de instalare -->
+        <footer style="text-align:center; font-size:0.7rem; margin-top:1.5rem; color:#8ba89a;">
+            <i class="fas fa-cloud-upload-alt"></i> Date salvate în cloud
+        </footer>
     </div>
 </div>
 
@@ -453,9 +419,6 @@
     let currentFilter = "all";
     let activeSearchTerm = "";
     let isSearchActive = false;
-    
-    // Variabile PWA
-    let deferredPrompt = null;
     
     async function initSupabase() {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -661,22 +624,6 @@
             };
         });
     }
-    
-    // PWA Install Logic
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const banner = document.getElementById('installBanner');
-        banner.classList.remove('hidden');
-        document.getElementById('installAppBtn').onclick = async () => {
-            banner.classList.add('hidden');
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-            }
-        };
-    });
     
     window.onload = async () => { 
         await initSupabase(); 
