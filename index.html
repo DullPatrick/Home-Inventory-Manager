@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>HomeStock - Gestionar Stoc Casa</title>
+    <title>HomeStock</title>
     
     <!-- PWA specific metas -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Același CSS ca în versiunea anterioară - l-am scurtat pentru spațiu, dar poți copia tot de mai sus */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #eef2f5; }
         .app-wrapper { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -53,6 +52,105 @@
         .delete { background: #f1f3f2; color: #8d6b63; }
         .empty-state { text-align: center; padding: 2rem; background: #f9fbfa; border-radius: 1.5rem; }
         .hidden { display: none; }
+        
+        /* Stiluri nou pentru căutare */
+        .search-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid #e2ece6;
+        }
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-wrapper i {
+            position: absolute;
+            left: 12px;
+            color: #9bb8ad;
+            font-size: 0.9rem;
+        }
+        #searchProductInput {
+            width: 100%;
+            padding: 0.7rem 0.7rem 0.7rem 2.2rem;
+            border-radius: 2rem;
+            border: 1px solid #dce6e1;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        #searchProductInput:focus {
+            border-color: #2b6e4f;
+            box-shadow: 0 0 0 2px rgba(43,110,79,0.2);
+        }
+        .btn-search {
+            background: #2b6e4f;
+            border: none;
+            padding: 0.7rem 1.4rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-search:hover {
+            background: #1e5a41;
+        }
+        .search-feedback {
+            font-size: 0.75rem;
+            background: #fef7e0;
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #b26b2e;
+        }
+        .search-feedback.success {
+            background: #e0f2e9;
+            color: #1e6f48;
+        }
+        .search-feedback.error {
+            background: #fee9e6;
+            color: #c23d22;
+        }
+        .clear-search {
+            background: transparent;
+            border: none;
+            color: #8ba89a;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 8px;
+            transition: color 0.2s;
+        }
+        .clear-search:hover {
+            color: #2b6e4f;
+        }
+        .search-highlight {
+            background-color: #fff0b5;
+            border-radius: 4px;
+            padding: 0 2px;
+            font-weight: 500;
+        }
+        .search-results-badge {
+            background: #2b6e4f10;
+            border-radius: 1.2rem;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            color: #2b6e4f;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -79,6 +177,18 @@
             <div class="stat-card"><div><h4 style="font-size:0.7rem;">Categorii</h4><div class="stat-number" id="totalCategories">0</div></div><i class="fas fa-tags"></i></div>
             <div class="stat-card"><div><h4 style="font-size:0.7rem;">Stoc scăzut</h4><div class="stat-number" id="lowStockCount">0</div></div><i class="fas fa-exclamation-triangle"></i></div>
         </div>
+        
+        <!-- SECȚIUNE DE CĂUTARE PRODUSE -->
+        <div class="search-card">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchProductInput" placeholder="Caută produs după nume (ex: Lapte, Pâine, Detergent...)">
+            </div>
+            <button id="performSearchBtn" class="btn-search"><i class="fas fa-search"></i> Caută</button>
+            <button id="clearSearchBtn" class="clear-search" title="Resetează căutarea"><i class="fas fa-times-circle"></i> Reset</button>
+            <div id="searchFeedbackArea" style="min-width: 160px;"></div>
+        </div>
+        
         <div class="form-card">
             <div class="form-row">
                 <div class="input-field"><label>Produs</label><input type="text" id="prodName" placeholder="Lapte"></div>
@@ -108,7 +218,11 @@
     let currentUser = null;
     let inventory = [];
     let currentFilter = "all";
-
+    
+    // Variabile pentru căutare
+    let activeSearchTerm = "";          // termenul curent de căutare (fără majuscule)
+    let isSearchActive = false;          // dacă există căutare activă
+    
     async function initSupabase() {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         return true;
@@ -118,7 +232,15 @@
         if (!currentUser) return [];
         const { data, error } = await supabaseClient.from('household_items').select('*').eq('user_id', currentUser.id).order('name');
         if (error) return [];
-        inventory = data.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, unit: item.unit, category: item.category, minStockThreshold: item.min_threshold }));
+        inventory = data.map(item => ({ 
+            id: item.id, 
+            name: item.name, 
+            quantity: item.quantity, 
+            unit: item.unit, 
+            category: item.category, 
+            minStockThreshold: item.min_threshold 
+        }));
+        // După reîncărcare, redesenăm cu starea curentă de căutare/filtru
         renderInventory();
         updateStats();
         return inventory;
@@ -126,9 +248,18 @@
 
     async function addProduct(name, quantity, unit, category, minThreshold) {
         if (!currentUser || !name.trim()) return false;
-        const { error } = await supabaseClient.from('household_items').insert([{ user_id: currentUser.id, name: name.trim(), quantity: parseFloat(quantity), unit, category, min_threshold: parseInt(minThreshold) }]);
+        const { error } = await supabaseClient.from('household_items').insert([{ 
+            user_id: currentUser.id, 
+            name: name.trim(), 
+            quantity: parseFloat(quantity), 
+            unit, 
+            category, 
+            min_threshold: parseInt(minThreshold) 
+        }]);
         if (error) { alert("Eroare: " + error.message); return false; }
         await loadInventory();
+        // Reset căutare activă după adăugare pentru a vedea noul produs în lista generală (opțional)
+        resetSearch();
         return true;
     }
 
@@ -144,14 +275,52 @@
         if (!confirm("Ștergi acest produs?")) return;
         await supabaseClient.from('household_items').delete().eq('id', id);
         await loadInventory();
+        // Dacă după ștergere inventarul e gol și căutarea activă era activă, resetăm căutarea pentru a nu rămâne în gol.
+        if (isSearchActive && inventory.length === 0) {
+            resetSearch();
+        } else {
+            // doar re-randare
+            renderInventory();
+        }
     }
-
-    function getFiltered() {
+    
+    // Funcție care aplică filtre + căutare (ordine: mai întâi filtrul după categorie stoc, apoi căutare după nume)
+    function getFilteredAndSearched() {
         let filtered = [...inventory];
+        // 1. Filtrare după status (low/instock/outofstock/all)
         if (currentFilter === "low") filtered = filtered.filter(i => i.quantity <= i.minStockThreshold);
         else if (currentFilter === "instock") filtered = filtered.filter(i => i.quantity > 0);
         else if (currentFilter === "outofstock") filtered = filtered.filter(i => i.quantity === 0);
+        
+        // 2. Dacă există căutare activă, filtrăm după termen (căutare insensibilă la diacritice? facem simplu ignore case)
+        if (isSearchActive && activeSearchTerm.trim() !== "") {
+            const term = activeSearchTerm.trim().toLowerCase();
+            filtered = filtered.filter(item => item.name.toLowerCase().includes(term));
+        }
         return filtered;
+    }
+    
+    // Funcție care generează highlight pentru numele produsului dacă termenul de căutare este activ
+    function highlightName(name, searchTerm) {
+        if (!isSearchActive || !searchTerm || searchTerm.trim() === "") return escapeHtml(name);
+        const lowerName = name.toLowerCase();
+        const lowerTerm = searchTerm.toLowerCase();
+        if (!lowerName.includes(lowerTerm)) return escapeHtml(name);
+        
+        // construim fragmente cu highlight
+        let result = "";
+        let lastIndex = 0;
+        let idx = lowerName.indexOf(lowerTerm);
+        while (idx !== -1) {
+            // partea dinainte
+            result += escapeHtml(name.substring(lastIndex, idx));
+            // partea evidențiată
+            result += `<span class="search-highlight">${escapeHtml(name.substring(idx, idx + lowerTerm.length))}</span>`;
+            lastIndex = idx + lowerTerm.length;
+            idx = lowerName.indexOf(lowerTerm, lastIndex);
+        }
+        result += escapeHtml(name.substring(lastIndex));
+        return result;
     }
 
     function updateStats() {
@@ -160,14 +329,49 @@
         document.getElementById('lowStockCount').innerText = inventory.filter(i => i.quantity <= i.minStockThreshold).length;
     }
 
+    // Actualizează feedback-ul în zona de căutare (afișează mesaj dacă produsul nu există sau câte rezultate)
+    function updateSearchFeedback(filteredCount) {
+        const feedbackDiv = document.getElementById('searchFeedbackArea');
+        if (!isSearchActive || activeSearchTerm.trim() === "") {
+            feedbackDiv.innerHTML = "";
+            return;
+        }
+        const term = activeSearchTerm.trim();
+        if (filteredCount === 0) {
+            feedbackDiv.innerHTML = `<div class="search-feedback error"><i class="fas fa-exclamation-circle"></i> Produsul "${escapeHtml(term)}" nu este adăugat în stoc.</div>`;
+        } else {
+            feedbackDiv.innerHTML = `<div class="search-feedback success"><i class="fas fa-check-circle"></i> Găsite ${filteredCount} rezultat(e) pentru "${escapeHtml(term)}"</div>`;
+        }
+    }
+    
+    // Render inventar cu suport highlight și mesaj de "nu există" special
     function renderInventory() {
         const grid = document.getElementById('inventoryGrid');
-        const filtered = getFiltered();
-        if (filtered.length === 0) { grid.innerHTML = `<div class="empty-state"><i class="fas fa-archive"></i> Niciun produs.</div>`; return; }
+        const filteredItems = getFilteredAndSearched();
+        
+        // Actualizăm feedback-ul în funcție de numărul de produse găsite (după toate filtrele)
+        updateSearchFeedback(filteredItems.length);
+        
+        if (filteredItems.length === 0) {
+            let emptyMessage = `<div class="empty-state"><i class="fas fa-archive"></i> Niciun produs.`;
+            if (isSearchActive && activeSearchTerm.trim() !== "") {
+                emptyMessage = `<div class="empty-state"><i class="fas fa-search"></i> Nu există produs care să conțină "${escapeHtml(activeSearchTerm.trim())}".<br><small>Încearcă un alt termen sau adaugă-l mai întâi.</small></div>`;
+            } else if (currentFilter !== "all") {
+                emptyMessage = `<div class="empty-state"><i class="fas fa-filter"></i> Niciun produs în această categorie.</div>`;
+            } else {
+                emptyMessage = `<div class="empty-state"><i class="fas fa-archive"></i> Adaugă primul produs folosind formularul de sus.</div>`;
+            }
+            grid.innerHTML = emptyMessage;
+            return;
+        }
+        
         let html = '';
-        filtered.forEach(prod => {
+        const searchTermRaw = isSearchActive ? activeSearchTerm : "";
+        filteredItems.forEach(prod => {
+            // Aplicăm highlight numelui dacă termenul de căutare există
+            const highlightedName = highlightName(prod.name, searchTermRaw);
             html += `<div class="product-card ${prod.quantity <= prod.minStockThreshold ? 'low-stock' : ''}">
-                <div style="display:flex; justify-content:space-between;"><strong>${escapeHtml(prod.name)}</strong><span style="background:#eef3f0; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.65rem;">${escapeHtml(prod.category)}</span></div>
+                <div style="display:flex; justify-content:space-between;"><strong>${highlightedName}</strong><span style="background:#eef3f0; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.65rem;">${escapeHtml(prod.category)}</span></div>
                 <div style="margin:8px 0;"><span class="quantity">${prod.quantity}</span> ${prod.unit} ${prod.quantity <= prod.minStockThreshold && prod.quantity > 0 ? '⚠️' : ''}</div>
                 <div class="actions"><button class="action-btn increment" onclick="updateQuantity('${prod.id}', 1)">+1</button><button class="action-btn decrement" onclick="updateQuantity('${prod.id}', -1)">-1</button><button class="action-btn delete" onclick="deleteProduct('${prod.id}')">🗑️</button></div>
             </div>`;
@@ -175,22 +379,155 @@
         grid.innerHTML = html;
     }
 
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-
+    function escapeHtml(str) { 
+        if (!str) return ''; 
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+    }
+    
+    // Funcție care inițializează căutarea pe baza câmpului input
+    function performSearch() {
+        const inputEl = document.getElementById('searchProductInput');
+        let searchValue = inputEl.value;
+        if (!searchValue.trim()) {
+            // Dacă e gol, resetăm căutarea
+            resetSearch();
+            return;
+        }
+        activeSearchTerm = searchValue.trim();
+        isSearchActive = true;
+        // Re-rendare cu termenul de căutare activ
+        renderInventory();
+    }
+    
+    function resetSearch() {
+        // Reset stare căutare
+        isSearchActive = false;
+        activeSearchTerm = "";
+        const inputEl = document.getElementById('searchProductInput');
+        if (inputEl) inputEl.value = "";
+        // Ștergem mesajul de feedback
+        const feedbackDiv = document.getElementById('searchFeedbackArea');
+        if (feedbackDiv) feedbackDiv.innerHTML = "";
+        // Re-rendare aplicând doar filtrul curent
+        renderInventory();
+    }
+    
     async function checkSession() {
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) { currentUser = session.user; document.getElementById('userEmail').innerText = currentUser.email; document.getElementById('authModal').classList.add('hidden'); document.getElementById('dashboard').classList.remove('hidden'); await loadInventory(); }
-        else { document.getElementById('authModal').classList.remove('hidden'); document.getElementById('dashboard').classList.add('hidden'); }
+        if (session?.user) { 
+            currentUser = session.user; 
+            document.getElementById('userEmail').innerText = currentUser.email; 
+            document.getElementById('authModal').classList.add('hidden'); 
+            document.getElementById('dashboard').classList.remove('hidden'); 
+            await loadInventory(); 
+            // resetăm căutarea după încărcare pentru o stare fresh
+            resetSearch();
+        } else { 
+            document.getElementById('authModal').classList.remove('hidden'); 
+            document.getElementById('dashboard').classList.add('hidden'); 
+        }
     }
 
-    async function handleLogin() { const email = document.getElementById('authEmail').value; const password = document.getElementById('authPassword').value; const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { document.getElementById('authError').innerText = error.message; } else { await checkSession(); } }
-    async function handleSignup() { const email = document.getElementById('authEmail').value; const password = document.getElementById('authPassword').value; if (password.length < 6) { document.getElementById('authError').innerText = "Parola minim 6 caractere"; return; } const { error } = await supabaseClient.auth.signUp({ email, password }); if (error) { document.getElementById('authError').innerText = error.message; } else { alert("Cont creat! Te poți autentifica."); } }
-    async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
+    async function handleLogin() { 
+        const email = document.getElementById('authEmail').value; 
+        const password = document.getElementById('authPassword').value; 
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); 
+        if (error) { 
+            document.getElementById('authError').innerText = error.message; 
+        } else { 
+            await checkSession(); 
+        } 
+    }
+    
+    async function handleSignup() { 
+        const email = document.getElementById('authEmail').value; 
+        const password = document.getElementById('authPassword').value; 
+        if (password.length < 6) { 
+            document.getElementById('authError').innerText = "Parola minim 6 caractere"; 
+            return; 
+        } 
+        const { error } = await supabaseClient.auth.signUp({ email, password }); 
+        if (error) { 
+            document.getElementById('authError').innerText = error.message; 
+        } else { 
+            alert("Cont creat! Te poți autentifica."); 
+        } 
+    }
+    
+    async function logout() { 
+        await supabaseClient.auth.signOut(); 
+        location.reload(); 
+    }
 
+    // Expunem funcții globale pentru butoanele dinamice
     window.updateQuantity = updateQuantity;
     window.deleteProduct = deleteProduct;
-
-    window.onload = async () => { await initSupabase(); await checkSession(); document.getElementById('loginBtn').onclick = handleLogin; document.getElementById('signupBtn').onclick = handleSignup; document.getElementById('logoutMainBtn').onclick = logout; document.getElementById('addProductBtn').onclick = async () => { await addProduct(document.getElementById('prodName').value, document.getElementById('prodQty').value, document.getElementById('prodUnit').value, document.getElementById('prodCat').value, document.getElementById('prodMin').value); document.getElementById('prodName').value = ''; }; document.querySelectorAll('.filter-chip').forEach(chip => { chip.onclick = () => { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); chip.classList.add('active'); currentFilter = chip.getAttribute('data-filter'); renderInventory(); }; }); };
+    
+    // Event handlers pentru schimbarea filtrului (păstrăm căutarea activă)
+    function setupFilterListeners() {
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentFilter = chip.getAttribute('data-filter');
+                // Re-rendare aplicând filtrul nou + eventual căutare activă
+                renderInventory();
+            };
+        });
+    }
+    
+    window.onload = async () => { 
+        await initSupabase(); 
+        await checkSession(); 
+        
+        // Butoane auth & logout
+        document.getElementById('loginBtn').onclick = handleLogin; 
+        document.getElementById('signupBtn').onclick = handleSignup; 
+        document.getElementById('logoutMainBtn').onclick = logout; 
+        
+        // Adăugare produs
+        document.getElementById('addProductBtn').onclick = async () => { 
+            await addProduct(
+                document.getElementById('prodName').value, 
+                document.getElementById('prodQty').value, 
+                document.getElementById('prodUnit').value, 
+                document.getElementById('prodCat').value, 
+                document.getElementById('prodMin').value
+            ); 
+            document.getElementById('prodName').value = ''; 
+            // Reinițializare căutare după adăugare (reset pentru a vedea toate produsele)
+            resetSearch();
+        }; 
+        
+        // Setare filtre
+        setupFilterListeners();
+        
+        // Gestionare căutare
+        const searchBtn = document.getElementById('performSearchBtn');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const searchInput = document.getElementById('searchProductInput');
+        
+        if (searchBtn) {
+            searchBtn.onclick = () => performSearch();
+        }
+        if (clearBtn) {
+            clearBtn.onclick = () => resetSearch();
+        }
+        if (searchInput) {
+            // Permite căutare și la apăsarea tastei Enter
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+        }
+        
+        // Dacă utilizatorul este logat deja, resetăm căutarea și facem render corect
+        if (currentUser) {
+            resetSearch();
+        }
+    };
 </script>
 </body>
 </html>
