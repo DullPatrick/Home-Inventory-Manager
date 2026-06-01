@@ -3,57 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>HomeStock</title>
+    <title>HomeStock - Gestionare Stoc Casnic</title>
     
-    <!-- PWA specific metas -->
+    <!-- PWA specific metas - optimizate pentru iOS și Android -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HomeStock">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2b6e4f">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://i.imgur.com/icon-192.png">
+    <meta name="description" content="Gestionați stocul casei dvs. ușor și rapid">
     
+    <!-- Manifest și iconițe pentru PWA -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        %22name%22:%22HomeStock%22,
+        %22short_name%22:%22HomeStock%22,
+        %22description%22:%22Gestioneaza stocul casei tale%22,
+        %22start_url%22:%22.%22,
+        %22display%22:%22standalone%22,
+        %22theme_color%22:%22#2b6e4f%22,
+        %22background_color%22:%22#eef2f5%22,
+        %22icons%22:[
+            {%22src%22:%22https://i.imgur.com/icon-72.png%22,%22sizes%22:%2272x72%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-96.png%22,%22sizes%2296x96%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-128.png%22,%22sizes%22128x128%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-144.png%22,%22sizes%22144x144%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-152.png%22,%22sizes%22152x152%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-192.png%22,%22sizes%22192x192%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-384.png%22,%22sizes%22384x384%22,%22type%22:%22image/png%22},
+            {%22src%22:%22https://i.imgur.com/icon-512.png%22,%22sizes%22512x512%22,%22type%22:%22image/png%22}
+        ]
+    }">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://i.imgur.com/icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.imgur.com/icon-192.png">
+    
+    <!-- Fonts și stiluri -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #eef2f5; }
-        .app-wrapper { max-width: 1400px; margin: 0 auto; padding: 1rem; }
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .auth-card { background: white; border-radius: 2rem; padding: 2rem; width: 90%; max-width: 460px; text-align: center; }
-        .input-auth { width: 100%; padding: 0.9rem; margin-bottom: 1rem; border-radius: 1.5rem; border: 1px solid #dce6e1; }
-        .btn-auth { width: 100%; background: #2b6e4f; border: none; padding: 0.8rem; border-radius: 2rem; color: white; font-weight: 700; cursor: pointer; }
-        .btn-auth-outline { background: transparent; border: 1px solid #2b6e4f; color: #2b6e4f; margin-top: 0.8rem; }
-        .error-msg { color: #d9534f; font-size: 0.75rem; }
-        .main-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.8rem 1.2rem; border-radius: 1.5rem; margin-bottom: 1rem; }
-        .logo h1 { font-size: 1.3rem; background: linear-gradient(135deg, #2b6e4f, #1e4a3b); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
-        .stat-card { background: white; border-radius: 1.2rem; padding: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
-        .stat-number { font-size: 1.4rem; font-weight: 800; color: #1e4a3b; }
-        .form-card { background: white; border-radius: 1.5rem; padding: 1rem; margin-bottom: 1rem; }
-        .form-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #eef2f5; 
+            /* Previne scroll-urile inutile pe mobil */
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .app-wrapper { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 1rem; 
+            padding-bottom: 2rem;
+            /* Safe area pentru notch-uri */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            padding-top: 1rem;
+        }
+        
+        /* Auth Overlay cu animație */
+        .auth-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(12px);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-card { 
+            background: white; 
+            border-radius: 2rem; 
+            padding: 2rem 1.5rem; 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .input-auth { 
+            width: 100%; 
+            padding: 0.9rem 1rem; 
+            margin-bottom: 1rem; 
+            border-radius: 1.5rem; 
+            border: 1px solid #e2ece6; 
+            font-size: 1rem;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+        }
+        
+        .input-auth:focus { 
+            outline: none; 
+            border-color: #2b6e4f; 
+            box-shadow: 0 0 0 3px rgba(43,110,79,0.1);
+        }
+        
+        .btn-auth { 
+            width: 100%; 
+            background: #2b6e4f; 
+            border: none; 
+            padding: 0.9rem; 
+            border-radius: 2rem; 
+            color: white; 
+            font-weight: 700; 
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.1s, background 0.2s;
+        }
+        
+        .btn-auth:active { transform: scale(0.97); }
+        .btn-auth-outline { 
+            background: transparent; 
+            border: 2px solid #2b6e4f; 
+            color: #2b6e4f; 
+            margin-top: 0.8rem; 
+        }
+        
+        .main-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: white; 
+            padding: 0.8rem 1.2rem; 
+            border-radius: 1.5rem; 
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        
+        .logo h1 { 
+            font-size: 1.3rem; 
+            background: linear-gradient(135deg, #2b6e4f, #1e4a3b); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            color: transparent; 
+        }
+        
+        .user-info { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 0.8rem; 
+            margin-bottom: 1rem; 
+        }
+        
+        .stat-card { 
+            background: white; 
+            border-radius: 1.2rem; 
+            padding: 0.8rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            transition: transform 0.1s;
+        }
+        
+        .stat-card:active { transform: scale(0.98); }
+        .stat-number { font-size: 1.6rem; font-weight: 800; color: #1e4a3b; }
+        
+        .form-card { 
+            background: white; 
+            border-radius: 1.5rem; 
+            padding: 1rem; 
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .form-row { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.5rem; 
+            align-items: flex-end;
+        }
+        
         .input-field { flex: 1; min-width: 100px; }
-        .input-field input, .input-field select { width: 100%; padding: 0.5rem; border-radius: 1rem; border: 1px solid #dce6e1; }
-        .btn-primary { background: #2b6e4f; border: none; padding: 0.5rem 1.2rem; border-radius: 1.5rem; color: white; cursor: pointer; }
-        .filter-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
-        .filter-chip { background: #eef3f0; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.7rem; cursor: pointer; }
+        .input-field label { font-size: 0.7rem; color: #6b8a7c; margin-bottom: 4px; display: block; }
+        .input-field input, .input-field select { 
+            width: 100%; 
+            padding: 0.6rem; 
+            border-radius: 1rem; 
+            border: 1px solid #dce6e1; 
+            font-size: 0.9rem;
+            -webkit-appearance: none;
+        }
+        
+        .btn-primary { 
+            background: #2b6e4f; 
+            border: none; 
+            padding: 0.6rem 1.2rem; 
+            border-radius: 1.5rem; 
+            color: white; 
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.1s;
+        }
+        
+        .btn-primary:active { transform: scale(0.96); }
+        
+        .filter-tabs { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.5rem; 
+            margin-bottom: 1rem; 
+        }
+        
+        .filter-chip { 
+            background: #eef3f0; 
+            padding: 0.4rem 1.2rem; 
+            border-radius: 2rem; 
+            font-size: 0.8rem; 
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
         .filter-chip.active { background: #2b6e4f; color: white; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem; }
-        .product-card { background: white; border-radius: 1.2rem; padding: 0.8rem; border-left: 4px solid #2b6e4f; }
+        
+        .inventory-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 0.8rem; 
+        }
+        
+        .product-card { 
+            background: white; 
+            border-radius: 1.2rem; 
+            padding: 0.8rem; 
+            border-left: 4px solid #2b6e4f;
+            transition: transform 0.1s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        
         .product-card.low-stock { border-left-color: #e67e22; background: #fffaf5; }
-        .quantity { font-size: 1.4rem; font-weight: 800; }
+        
+        .quantity { font-size: 1.5rem; font-weight: 800; }
+        
         .actions { display: flex; gap: 0.5rem; margin-top: 8px; justify-content: flex-end; }
-        .action-btn { padding: 4px 10px; border-radius: 30px; cursor: pointer; border: none; }
+        .action-btn { 
+            padding: 6px 14px; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            border: none;
+            font-weight: 600;
+            transition: transform 0.1s;
+        }
+        .action-btn:active { transform: scale(0.94); }
         .increment { background: #e1f5ec; color: #1e6f48; }
         .decrement { background: #ffe8e4; color: #bb5e3a; }
         .delete { background: #f1f3f2; color: #8d6b63; }
+        
         .empty-state { text-align: center; padding: 2rem; background: #f9fbfa; border-radius: 1.5rem; }
         .hidden { display: none; }
         
-        /* Stiluri nou pentru căutare */
+        /* Stiluri căutare */
         .search-card {
             background: white;
             border-radius: 1.5rem;
@@ -63,50 +278,44 @@
             align-items: center;
             gap: 0.8rem;
             flex-wrap: wrap;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-            border: 1px solid #e2ece6;
         }
+        
         .search-input-wrapper {
-            flex: 1;
+            flex: 2;
             position: relative;
-            display: flex;
-            align-items: center;
         }
+        
         .search-input-wrapper i {
             position: absolute;
-            left: 12px;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: #9bb8ad;
-            font-size: 0.9rem;
         }
+        
         #searchProductInput {
             width: 100%;
-            padding: 0.7rem 0.7rem 0.7rem 2.2rem;
+            padding: 0.7rem 0.7rem 0.7rem 2.4rem;
             border-radius: 2rem;
             border: 1px solid #dce6e1;
-            font-size: 0.9rem;
-            outline: none;
-            transition: all 0.2s;
+            font-size: 0.95rem;
+            -webkit-appearance: none;
         }
-        #searchProductInput:focus {
-            border-color: #2b6e4f;
-            box-shadow: 0 0 0 2px rgba(43,110,79,0.2);
-        }
+        
         .btn-search {
             background: #2b6e4f;
             border: none;
-            padding: 0.7rem 1.4rem;
+            padding: 0.7rem 1.2rem;
             border-radius: 2rem;
             color: white;
             font-weight: 600;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
+            transition: transform 0.1s;
         }
-        .btn-search:hover {
-            background: #1e5a41;
-        }
+        
+        .btn-search:active { transform: scale(0.96); }
+        .clear-search { background: #eef3f0; border: none; padding: 0.7rem 1rem; border-radius: 2rem; cursor: pointer; }
+        
         .search-feedback {
             font-size: 0.75rem;
             background: #fef7e0;
@@ -115,102 +324,126 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            color: #b26b2e;
         }
-        .search-feedback.success {
-            background: #e0f2e9;
-            color: #1e6f48;
-        }
-        .search-feedback.error {
-            background: #fee9e6;
-            color: #c23d22;
-        }
-        .clear-search {
-            background: transparent;
-            border: none;
-            color: #8ba89a;
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 0 8px;
-            transition: color 0.2s;
-        }
-        .clear-search:hover {
-            color: #2b6e4f;
-        }
+        
+        .search-feedback.success { background: #e0f2e9; color: #1e6f48; }
+        .search-feedback.error { background: #fee9e6; color: #c23d22; }
+        
         .search-highlight {
-            background-color: #fff0b5;
+            background-color: #ffecb3;
             border-radius: 4px;
             padding: 0 2px;
+            font-weight: 600;
+        }
+        
+        /* Instalare PWA button sugerat */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #1e4a3b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             font-weight: 500;
         }
-        .search-results-badge {
-            background: #2b6e4f10;
-            border-radius: 1.2rem;
-            padding: 0.2rem 0.7rem;
-            font-size: 0.7rem;
-            color: #2b6e4f;
-            font-weight: 500;
+        
+        .install-prompt button {
+            background: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 2rem;
+            color: #1e4a3b;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row { flex-direction: column; }
+            .input-field { width: 100%; }
+            .btn-primary { width: 100%; margin-top: 8px; }
         }
     </style>
 </head>
 <body>
 <div id="app">
+    <!-- Auth Modal -->
     <div id="authModal" class="auth-overlay">
         <div class="auth-card">
-            <h2><i class="fas fa-boxes"></i> HomeStock</h2>
-            <p>Conectează-te pentru a-ți gestiona stocul</p>
-            <div id="authError" class="error-msg"></div>
-            <input type="email" id="authEmail" class="input-auth" placeholder="Email">
-            <input type="password" id="authPassword" class="input-auth" placeholder="Parolă (min 6 caractere)">
+            <i class="fas fa-boxes" style="font-size: 2.5rem; color: #2b6e4f; margin-bottom: 0.5rem;"></i>
+            <h2 style="margin-bottom: 0.5rem;">HomeStock</h2>
+            <p style="margin-bottom: 1.5rem; color: #6b8a7c;">Conectează-te pentru a-ți gestiona stocul</p>
+            <div id="authError" class="error-msg" style="color:#d9534f; font-size:0.75rem;"></div>
+            <input type="email" id="authEmail" class="input-auth" placeholder="Email" autocomplete="email">
+            <input type="password" id="authPassword" class="input-auth" placeholder="Parolă (min 6 caractere)" autocomplete="current-password">
             <button id="loginBtn" class="btn-auth"><i class="fas fa-sign-in-alt"></i> Autentificare</button>
             <button id="signupBtn" class="btn-auth btn-auth-outline"><i class="fas fa-user-plus"></i> Creează cont nou</button>
         </div>
     </div>
 
+    <!-- Dashboard Principal -->
     <div id="dashboard" class="app-wrapper hidden">
         <div class="main-header">
             <div class="logo"><h1><i class="fas fa-home"></i> HomeStock</h1></div>
-            <div class="user-info"><span id="userEmail"></span><button id="logoutMainBtn" class="btn-auth-outline" style="padding:0.3rem 0.8rem; margin-top:0;">Ieșire</button></div>
+            <div class="user-info"><span id="userEmail" style="font-size:0.8rem;"></span><button id="logoutMainBtn" style="background:none; border:1px solid #2b6e4f; padding:0.3rem 0.8rem; border-radius:1.5rem;">Ieșire</button></div>
         </div>
+        
         <div class="stats-grid">
             <div class="stat-card"><div><h4 style="font-size:0.7rem;">Produse</h4><div class="stat-number" id="totalItems">0</div></div><i class="fas fa-cube"></i></div>
             <div class="stat-card"><div><h4 style="font-size:0.7rem;">Categorii</h4><div class="stat-number" id="totalCategories">0</div></div><i class="fas fa-tags"></i></div>
             <div class="stat-card"><div><h4 style="font-size:0.7rem;">Stoc scăzut</h4><div class="stat-number" id="lowStockCount">0</div></div><i class="fas fa-exclamation-triangle"></i></div>
         </div>
         
-        <!-- SECȚIUNE DE CĂUTARE PRODUSE -->
+        <!-- Secțiune căutare -->
         <div class="search-card">
             <div class="search-input-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchProductInput" placeholder="Caută produs după nume (ex: Lapte, Pâine, Detergent...)">
+                <input type="text" id="searchProductInput" placeholder="Caută produs...">
             </div>
             <button id="performSearchBtn" class="btn-search"><i class="fas fa-search"></i> Caută</button>
-            <button id="clearSearchBtn" class="clear-search" title="Resetează căutarea"><i class="fas fa-times-circle"></i> Reset</button>
-            <div id="searchFeedbackArea" style="min-width: 160px;"></div>
+            <button id="clearSearchBtn" class="clear-search"><i class="fas fa-times"></i> Reset</button>
+            <div id="searchFeedbackArea"></div>
         </div>
         
+        <!-- Formular adăugare -->
         <div class="form-card">
             <div class="form-row">
-                <div class="input-field"><label>Produs</label><input type="text" id="prodName" placeholder="Lapte"></div>
-                <div class="input-field"><label>Cant.</label><input type="number" id="prodQty" value="1"></div>
-                <div class="input-field"><label>UM</label><select id="prodUnit"><option>buc</option><option>kg</option><option>L</option></select></div>
+                <div class="input-field"><label>Produs</label><input type="text" id="prodName" placeholder="Ex: Lapte"></div>
+                <div class="input-field"><label>Cantitate</label><input type="number" id="prodQty" value="1" step="0.5"></div>
+                <div class="input-field"><label>UM</label><select id="prodUnit"><option>buc</option><option>kg</option><option>L</option><option>ml</option></select></div>
                 <div class="input-field"><label>Categorie</label><select id="prodCat"><option>Alimente</option><option>Curățenie</option><option>Igienă</option><option>Altele</option></select></div>
-                <div class="input-field"><label>Prag</label><input type="number" id="prodMin" value="2"></div>
+                <div class="input-field"><label>Prag minim</label><input type="number" id="prodMin" value="2"></div>
                 <button id="addProductBtn" class="btn-primary"><i class="fas fa-plus"></i> Adaugă</button>
             </div>
         </div>
+        
+        <!-- Filtre -->
         <div class="filter-tabs">
             <div class="filter-chip active" data-filter="all">Toate</div>
             <div class="filter-chip" data-filter="low">Stoc scăzut</div>
             <div class="filter-chip" data-filter="instock">În stoc</div>
             <div class="filter-chip" data-filter="outofstock">Epuizate</div>
         </div>
+        
         <div id="inventoryGrid" class="inventory-grid"></div>
-        <footer style="text-align:center; font-size:0.6rem; margin-top:1rem;">📱 Date salvate în cloud</footer>
+        <footer style="text-align:center; font-size:0.7rem; margin-top:1.5rem; color:#8ba89a;">📱 Date salvate în cloud • Instalează aplicația pe telefon</footer>
+    </div>
+    
+    <!-- PWA Install Prompt (opțional) -->
+    <div id="installBanner" class="install-prompt hidden">
+        <span><i class="fas fa-download"></i> Instalează HomeStock pe telefon</span>
+        <button id="installAppBtn">Instalează</button>
     </div>
 </div>
 
 <script>
+    // CONFIG SUPABASE
     const SUPABASE_URL = 'https://lqhlndoykitoaihzotgm.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxaGxuZG95a2l0b2FpaHpvdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTAyMzIsImV4cCI6MjA5Mzk4NjIzMn0.L5KA339bAzgmQeTu-ZNyog-qQ-4KgeVRcMYXnyuElr0';
     
@@ -218,16 +451,17 @@
     let currentUser = null;
     let inventory = [];
     let currentFilter = "all";
+    let activeSearchTerm = "";
+    let isSearchActive = false;
     
-    // Variabile pentru căutare
-    let activeSearchTerm = "";          // termenul curent de căutare (fără majuscule)
-    let isSearchActive = false;          // dacă există căutare activă
+    // Variabile PWA
+    let deferredPrompt = null;
     
     async function initSupabase() {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         return true;
     }
-
+    
     async function loadInventory() {
         if (!currentUser) return [];
         const { data, error } = await supabaseClient.from('household_items').select('*').eq('user_id', currentUser.id).order('name');
@@ -240,12 +474,11 @@
             category: item.category, 
             minStockThreshold: item.min_threshold 
         }));
-        // După reîncărcare, redesenăm cu starea curentă de căutare/filtru
         renderInventory();
         updateStats();
         return inventory;
     }
-
+    
     async function addProduct(name, quantity, unit, category, minThreshold) {
         if (!currentUser || !name.trim()) return false;
         const { error } = await supabaseClient.from('household_items').insert([{ 
@@ -258,11 +491,10 @@
         }]);
         if (error) { alert("Eroare: " + error.message); return false; }
         await loadInventory();
-        // Reset căutare activă după adăugare pentru a vedea noul produs în lista generală (opțional)
         resetSearch();
         return true;
     }
-
+    
     async function updateQuantity(id, delta) {
         const item = inventory.find(i => i.id == id);
         if (!item) return;
@@ -270,29 +502,20 @@
         await supabaseClient.from('household_items').update({ quantity: newQty }).eq('id', id);
         await loadInventory();
     }
-
+    
     async function deleteProduct(id) {
         if (!confirm("Ștergi acest produs?")) return;
         await supabaseClient.from('household_items').delete().eq('id', id);
         await loadInventory();
-        // Dacă după ștergere inventarul e gol și căutarea activă era activă, resetăm căutarea pentru a nu rămâne în gol.
-        if (isSearchActive && inventory.length === 0) {
-            resetSearch();
-        } else {
-            // doar re-randare
-            renderInventory();
-        }
+        if (isSearchActive && inventory.length === 0) resetSearch();
     }
     
-    // Funcție care aplică filtre + căutare (ordine: mai întâi filtrul după categorie stoc, apoi căutare după nume)
     function getFilteredAndSearched() {
         let filtered = [...inventory];
-        // 1. Filtrare după status (low/instock/outofstock/all)
         if (currentFilter === "low") filtered = filtered.filter(i => i.quantity <= i.minStockThreshold);
         else if (currentFilter === "instock") filtered = filtered.filter(i => i.quantity > 0);
         else if (currentFilter === "outofstock") filtered = filtered.filter(i => i.quantity === 0);
         
-        // 2. Dacă există căutare activă, filtrăm după termen (căutare insensibilă la diacritice? facem simplu ignore case)
         if (isSearchActive && activeSearchTerm.trim() !== "") {
             const term = activeSearchTerm.trim().toLowerCase();
             filtered = filtered.filter(item => item.name.toLowerCase().includes(term));
@@ -300,21 +523,16 @@
         return filtered;
     }
     
-    // Funcție care generează highlight pentru numele produsului dacă termenul de căutare este activ
     function highlightName(name, searchTerm) {
         if (!isSearchActive || !searchTerm || searchTerm.trim() === "") return escapeHtml(name);
         const lowerName = name.toLowerCase();
         const lowerTerm = searchTerm.toLowerCase();
         if (!lowerName.includes(lowerTerm)) return escapeHtml(name);
-        
-        // construim fragmente cu highlight
         let result = "";
         let lastIndex = 0;
         let idx = lowerName.indexOf(lowerTerm);
         while (idx !== -1) {
-            // partea dinainte
             result += escapeHtml(name.substring(lastIndex, idx));
-            // partea evidențiată
             result += `<span class="search-highlight">${escapeHtml(name.substring(idx, idx + lowerTerm.length))}</span>`;
             lastIndex = idx + lowerTerm.length;
             idx = lowerName.indexOf(lowerTerm, lastIndex);
@@ -322,14 +540,13 @@
         result += escapeHtml(name.substring(lastIndex));
         return result;
     }
-
+    
     function updateStats() {
         document.getElementById('totalItems').innerText = inventory.length;
         document.getElementById('totalCategories').innerText = new Set(inventory.map(i => i.category)).size;
         document.getElementById('lowStockCount').innerText = inventory.filter(i => i.quantity <= i.minStockThreshold).length;
     }
-
-    // Actualizează feedback-ul în zona de căutare (afișează mesaj dacă produsul nu există sau câte rezultate)
+    
     function updateSearchFeedback(filteredCount) {
         const feedbackDiv = document.getElementById('searchFeedbackArea');
         if (!isSearchActive || activeSearchTerm.trim() === "") {
@@ -338,77 +555,62 @@
         }
         const term = activeSearchTerm.trim();
         if (filteredCount === 0) {
-            feedbackDiv.innerHTML = `<div class="search-feedback error"><i class="fas fa-exclamation-circle"></i> Produsul "${escapeHtml(term)}" nu este adăugat în stoc.</div>`;
+            feedbackDiv.innerHTML = `<div class="search-feedback error"><i class="fas fa-exclamation-circle"></i> Produsul "${escapeHtml(term)}" nu este în stoc.</div>`;
         } else {
-            feedbackDiv.innerHTML = `<div class="search-feedback success"><i class="fas fa-check-circle"></i> Găsite ${filteredCount} rezultat(e) pentru "${escapeHtml(term)}"</div>`;
+            feedbackDiv.innerHTML = `<div class="search-feedback success"><i class="fas fa-check-circle"></i> Găsite ${filteredCount} rezultat(e)</div>`;
         }
     }
     
-    // Render inventar cu suport highlight și mesaj de "nu există" special
     function renderInventory() {
         const grid = document.getElementById('inventoryGrid');
         const filteredItems = getFilteredAndSearched();
-        
-        // Actualizăm feedback-ul în funcție de numărul de produse găsite (după toate filtrele)
         updateSearchFeedback(filteredItems.length);
         
         if (filteredItems.length === 0) {
             let emptyMessage = `<div class="empty-state"><i class="fas fa-archive"></i> Niciun produs.`;
             if (isSearchActive && activeSearchTerm.trim() !== "") {
-                emptyMessage = `<div class="empty-state"><i class="fas fa-search"></i> Nu există produs care să conțină "${escapeHtml(activeSearchTerm.trim())}".<br><small>Încearcă un alt termen sau adaugă-l mai întâi.</small></div>`;
+                emptyMessage = `<div class="empty-state"><i class="fas fa-search"></i> Nu există produs cu numele "${escapeHtml(activeSearchTerm.trim())}".<br><small>Încearcă alt termen.</small></div>`;
             } else if (currentFilter !== "all") {
                 emptyMessage = `<div class="empty-state"><i class="fas fa-filter"></i> Niciun produs în această categorie.</div>`;
             } else {
-                emptyMessage = `<div class="empty-state"><i class="fas fa-archive"></i> Adaugă primul produs folosind formularul de sus.</div>`;
+                emptyMessage = `<div class="empty-state"><i class="fas fa-archive"></i> Adaugă primul produs folosind formularul.</div>`;
             }
             grid.innerHTML = emptyMessage;
             return;
         }
         
         let html = '';
-        const searchTermRaw = isSearchActive ? activeSearchTerm : "";
         filteredItems.forEach(prod => {
-            // Aplicăm highlight numelui dacă termenul de căutare există
-            const highlightedName = highlightName(prod.name, searchTermRaw);
+            const highlightedName = highlightName(prod.name, activeSearchTerm);
             html += `<div class="product-card ${prod.quantity <= prod.minStockThreshold ? 'low-stock' : ''}">
                 <div style="display:flex; justify-content:space-between;"><strong>${highlightedName}</strong><span style="background:#eef3f0; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.65rem;">${escapeHtml(prod.category)}</span></div>
                 <div style="margin:8px 0;"><span class="quantity">${prod.quantity}</span> ${prod.unit} ${prod.quantity <= prod.minStockThreshold && prod.quantity > 0 ? '⚠️' : ''}</div>
-                <div class="actions"><button class="action-btn increment" onclick="updateQuantity('${prod.id}', 1)">+1</button><button class="action-btn decrement" onclick="updateQuantity('${prod.id}', -1)">-1</button><button class="action-btn delete" onclick="deleteProduct('${prod.id}')">🗑️</button></div>
+                <div class="actions"><button class="action-btn increment" onclick="window.updateQuantity('${prod.id}', 1)">+1</button><button class="action-btn decrement" onclick="window.updateQuantity('${prod.id}', -1)">-1</button><button class="action-btn delete" onclick="window.deleteProduct('${prod.id}')">🗑️</button></div>
             </div>`;
         });
         grid.innerHTML = html;
     }
-
+    
     function escapeHtml(str) { 
         if (!str) return ''; 
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
     }
     
-    // Funcție care inițializează căutarea pe baza câmpului input
     function performSearch() {
         const inputEl = document.getElementById('searchProductInput');
         let searchValue = inputEl.value;
-        if (!searchValue.trim()) {
-            // Dacă e gol, resetăm căutarea
-            resetSearch();
-            return;
-        }
+        if (!searchValue.trim()) { resetSearch(); return; }
         activeSearchTerm = searchValue.trim();
         isSearchActive = true;
-        // Re-rendare cu termenul de căutare activ
         renderInventory();
     }
     
     function resetSearch() {
-        // Reset stare căutare
         isSearchActive = false;
         activeSearchTerm = "";
         const inputEl = document.getElementById('searchProductInput');
         if (inputEl) inputEl.value = "";
-        // Ștergem mesajul de feedback
-        const feedbackDiv = document.getElementById('searchFeedbackArea');
-        if (feedbackDiv) feedbackDiv.innerHTML = "";
-        // Re-rendare aplicând doar filtrul curent
+        document.getElementById('searchFeedbackArea').innerHTML = "";
         renderInventory();
     }
     
@@ -420,72 +622,68 @@
             document.getElementById('authModal').classList.add('hidden'); 
             document.getElementById('dashboard').classList.remove('hidden'); 
             await loadInventory(); 
-            // resetăm căutarea după încărcare pentru o stare fresh
             resetSearch();
         } else { 
             document.getElementById('authModal').classList.remove('hidden'); 
             document.getElementById('dashboard').classList.add('hidden'); 
         }
     }
-
+    
     async function handleLogin() { 
         const email = document.getElementById('authEmail').value; 
         const password = document.getElementById('authPassword').value; 
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); 
-        if (error) { 
-            document.getElementById('authError').innerText = error.message; 
-        } else { 
-            await checkSession(); 
-        } 
+        if (error) document.getElementById('authError').innerText = error.message;
+        else await checkSession(); 
     }
     
     async function handleSignup() { 
         const email = document.getElementById('authEmail').value; 
         const password = document.getElementById('authPassword').value; 
-        if (password.length < 6) { 
-            document.getElementById('authError').innerText = "Parola minim 6 caractere"; 
-            return; 
-        } 
+        if (password.length < 6) { document.getElementById('authError').innerText = "Parola minim 6 caractere"; return; } 
         const { error } = await supabaseClient.auth.signUp({ email, password }); 
-        if (error) { 
-            document.getElementById('authError').innerText = error.message; 
-        } else { 
-            alert("Cont creat! Te poți autentifica."); 
-        } 
+        if (error) document.getElementById('authError').innerText = error.message;
+        else alert("Cont creat! Te poți autentifica."); 
     }
     
-    async function logout() { 
-        await supabaseClient.auth.signOut(); 
-        location.reload(); 
-    }
-
-    // Expunem funcții globale pentru butoanele dinamice
+    async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
+    
     window.updateQuantity = updateQuantity;
     window.deleteProduct = deleteProduct;
     
-    // Event handlers pentru schimbarea filtrului (păstrăm căutarea activă)
     function setupFilterListeners() {
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.onclick = () => {
                 document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
                 currentFilter = chip.getAttribute('data-filter');
-                // Re-rendare aplicând filtrul nou + eventual căutare activă
                 renderInventory();
             };
         });
     }
     
+    // PWA Install Logic
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const banner = document.getElementById('installBanner');
+        banner.classList.remove('hidden');
+        document.getElementById('installAppBtn').onclick = async () => {
+            banner.classList.add('hidden');
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+            }
+        };
+    });
+    
     window.onload = async () => { 
         await initSupabase(); 
         await checkSession(); 
-        
-        // Butoane auth & logout
         document.getElementById('loginBtn').onclick = handleLogin; 
         document.getElementById('signupBtn').onclick = handleSignup; 
         document.getElementById('logoutMainBtn').onclick = logout; 
-        
-        // Adăugare produs
         document.getElementById('addProductBtn').onclick = async () => { 
             await addProduct(
                 document.getElementById('prodName').value, 
@@ -495,38 +693,13 @@
                 document.getElementById('prodMin').value
             ); 
             document.getElementById('prodName').value = ''; 
-            // Reinițializare căutare după adăugare (reset pentru a vedea toate produsele)
             resetSearch();
         }; 
-        
-        // Setare filtre
         setupFilterListeners();
-        
-        // Gestionare căutare
-        const searchBtn = document.getElementById('performSearchBtn');
-        const clearBtn = document.getElementById('clearSearchBtn');
-        const searchInput = document.getElementById('searchProductInput');
-        
-        if (searchBtn) {
-            searchBtn.onclick = () => performSearch();
-        }
-        if (clearBtn) {
-            clearBtn.onclick = () => resetSearch();
-        }
-        if (searchInput) {
-            // Permite căutare și la apăsarea tastei Enter
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    performSearch();
-                }
-            });
-        }
-        
-        // Dacă utilizatorul este logat deja, resetăm căutarea și facem render corect
-        if (currentUser) {
-            resetSearch();
-        }
+        document.getElementById('performSearchBtn').onclick = performSearch;
+        document.getElementById('clearSearchBtn').onclick = resetSearch;
+        document.getElementById('searchProductInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+        if (currentUser) resetSearch();
     };
 </script>
 </body>
